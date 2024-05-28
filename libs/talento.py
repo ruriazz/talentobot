@@ -1,4 +1,5 @@
 import aiohttp
+import pytz
 from datetime import datetime
 from typing import Dict, Any, Union, Optional, Tuple, List
 from pydantic import BaseModel, Field
@@ -59,7 +60,8 @@ class Talento:
 
                 return False, resp_json['message']
 
-    async def get_histories(self, date: datetime = datetime.now()) -> List[Dict[str, Any]]:
+    async def get_histories(self, date: Optional[datetime] = None) -> List[Dict[str, Any]]:
+        date = date or datetime.now().replace(tzinfo=pytz.timezone('Asia/Jakarta'))
         async with aiohttp.ClientSession() as session:
             async with session.get(self._rest_url(f'/talenta/attendance/{date.strftime("%Y-%m-%d")}'), headers=self.authorization) as resp:
                 if resp.status == 200:
