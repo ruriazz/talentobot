@@ -130,3 +130,4 @@ cython_debug/
 
 # IDE
 .vscode/
+*_pid

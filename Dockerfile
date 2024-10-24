@@ -1,6 +1,15 @@
 FROM python:3.11.7-alpine
 
-RUN apk add --update nodejs npm
+RUN apk add --update --no-cache \
+    nodejs \
+    npm \
+    mariadb-dev \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    build-base \
+    pkgconfig
+
 RUN npm install pm2 -g
 
 WORKDIR /app

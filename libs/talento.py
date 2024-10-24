@@ -1,9 +1,10 @@
+import requests
 import aiohttp
 import pytz
 from datetime import datetime
 from typing import Dict, Any, Union, Optional, Tuple, List
 from pydantic import BaseModel, Field
-from bot.settings import TALENTO_API_URL
+from common.settings import TALENTO_API_URL
 
 
 class TalentoUser(BaseModel):
@@ -48,9 +49,9 @@ class Talento:
                 resp_json = await resp.json()
                 if resp.status == 200:
                     return True, resp_json['data']['token']
-                
+
                 return False, resp_json['message']
-            
+
     async def submit_attendance(self, token: str) -> Union[str, Dict[str, Any]]:
         async with aiohttp.ClientSession() as session:
             async with session.put(self._rest_url('/talenta/attendance'), json={ 'token': token }, headers=self.authorization) as resp:
@@ -68,3 +69,25 @@ class Talento:
                     resp_json = await resp.json()
                     return resp_json['data']
         return []
+
+    def sync_get_histories(self, date: Optional[datetime] = None) -> List[Dict[str, Any]]:
+        date = date or datetime.now().replace(tzinfo=pytz.timezone('Asia/Jakarta'))
+        resp = requests.get(self._rest_url(f'/talenta/attendance/{date.strftime("%Y-%m-%d")}'), headers=self.authorization)
+        if resp.status_code == 200:
+                return resp.json()['data']
+
+    def sync_create_attendance(self, attendance_type: str) -> Tuple[bool, str]:
+        resp = requests.post(self._rest_url(f'/talenta/attendance/{attendance_type}'), headers=self.authorization)
+        resp_json = resp.json()
+
+        if resp.status_code == 200:
+            return True, resp_json['data']['token']
+        return False, resp_json['message']
+
+    def sync_submit_attendance(self, token: str) -> Union[str, Dict[str, Any]]:
+        resp = requests.put(self._rest_url('/talenta/attendance'), json={ 'token': token }, headers=self.authorization)
+        resp_json = resp.json()
+
+        if resp.status_code == 200:
+            return True, resp_json['data']
+        return False, resp_json['message']

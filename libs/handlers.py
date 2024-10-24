@@ -15,3 +15,8 @@ def handle_errors():
         log = logging.getLogger('talentobot@handle_errors')
         traceback.print_exc()
         log.error(f"An error occurred: {e}")
+
+def raise_error(e: Exception) -> None:
+    log = logging.getLogger('talentobot@error')
+    traceback.print_exc()
+    log.error(f"An error occurred: {e}")

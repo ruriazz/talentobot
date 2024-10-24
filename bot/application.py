@@ -3,19 +3,17 @@ import discord
 import logging
 from discord.ext import commands
 from bot.settings import COMMANDS
-from bot.settings import DISCORD_BOT_TOKEN
+from common.settings import DISCORD_BOT_TOKEN
 from libs.entity import Repository
 from handlers.message_received import message_received
+from common.log import logging
 
 
 bot = commands.Bot(command_prefix='/', intents=discord.Intents.default())
 
-logging.basicConfig(level=logging.INFO,
-                    format='[%(asctime)s][%(name)s][%(levelname)s] %(message)s')
-
 class Application:
     repo: Repository
-    log: logging = logging.getLogger('talentobot@application')
+    log: logging.Logger = logging.getLogger('talentobot@application')
 
     async def configure(self):
         self._load_commands()

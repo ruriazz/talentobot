@@ -51,9 +51,11 @@ class Repository(BaseModel):
             self.members[kwargs['id']] = DiscordMember(**kwargs)
         return self
 
-    def create_authentication(self, user: DiscordMember) -> "Repository":
+    def create_authentication(self, user: DiscordMember, init: bool = True) -> "Repository":
         self.authentication[user.id] = self.authentication.get(user.id) or TalentaAuthData()
-        self.authentication[user.id].steps = [TalentaAuthStep.INIT]
+        if init:
+            self.authentication[user.id].steps = [TalentaAuthStep.INIT]
+
         return self
 
     def me(self, ctx: commands.Context) -> DiscordMember:
@@ -61,16 +63,16 @@ class Repository(BaseModel):
 
     def get_authentication(self, user: DiscordMember) -> Optional[TalentaAuthData]:
         return self.authentication.get(user.id)
-    
+
     def my_activity(self, ctx: Union[commands.Context, discord.Message]) -> Optional[Activity]:
         user = self.members[ctx.author.id]
         return self.activity.get(user.id)
-    
+
     def do_activity(self, ctx: Union[commands.Context, discord.Message], activity: Activity) -> "Repository":
         user = self.members[ctx.author.id]
         self.activity[user.id] = activity
         return self
-    
+
     def clear_activity(self, ctx: Union[commands.Context, discord.Message]) -> "Repository":
         user = self.members[ctx.author.id]
         del self.activity[user.id]

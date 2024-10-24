@@ -1,3 +1,4 @@
+import asyncio
 from discord.ext import commands
 from discord.user import User
 from discord.message import Message
@@ -8,6 +9,8 @@ from libs.enums import Activity
 from libs.strings import is_email_address
 from libs.handlers import handle_errors
 from libs.talento import Talento
+from common.models.user import User
+from common.models.user_setting import UserSetting
 
 
 @bot.command(name='auth')
@@ -27,7 +30,7 @@ async def input_talenta_email(ctx: Message) -> None:
                     .next_step()
             app.repo.do_activity(ctx, Activity.AUTH_INPUT_PASSWORD)
             return await ctx.author.send('Please input your password of talenta account')
-        
+
         await ctx.author.send(f"`{ctx.content}` is invalid email. Please enter the appropriate email address!")
 
 async def input_talenta_password(ctx: Message) -> None:
@@ -35,7 +38,7 @@ async def input_talenta_password(ctx: Message) -> None:
         if auth := app.repo.get_authentication(app.repo.me(ctx)):
             auth.set_password(ctx.content) \
                 .next_step()
-            
+
         auth_data = app.repo.get_authentication(app.repo.me(ctx))
         if auth_data.username and auth_data.password:
             async with ctx.author.typing():
@@ -49,4 +52,14 @@ async def input_talenta_password(ctx: Message) -> None:
                     .next_step()
                 app.repo.clear_activity(ctx)
 
+        await asyncio.to_thread(init_user, ctx, auth_data.username, auth_data.password, result.auth_token)
         await ctx.author.send(f'Authentication success!\nCurrently you are logged in Talenta as `{result.user.fullname}<{result.user.email}>`')
+
+def init_user(ctx: Message, username: str, password: str, auth_token: str) -> None:
+    if user := User.get(User.uid==ctx.author.id):
+        if not (_ := UserSetting.get(UserSetting.user==user)):
+            UserSetting.init_settings(user)
+    else:
+        user = User.Create(uid=ctx.author.id)
+        UserSetting.init_settings(user)
+    user.UpdateAuthData(username=username, password=password, auth_token=auth_token)
